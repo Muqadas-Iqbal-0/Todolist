@@ -1,35 +1,48 @@
 import { useEffect, useState } from "react";
-
 import "./App.css";
 
 function App() {
   const [task, setTask] = useState("");
   const [tasks, setTasks] = useState([]);
+  const [editIndex, setEditIndex] = useState(null);
 
   const addTasks = () => {
-    if (task.trim()) {
-      setTasks([...tasks, task]);
-      setTask("");
-      localStorage.setItem("tasks", JSON.stringify([...tasks, task]));
+    if (editIndex !== null) {
+      const updatedTasks = tasks.map((t, index) =>
+        index === editIndex ? task : t
+      );
+      setTasks(updatedTasks);
+      localStorage.setItem("tasks", JSON.stringify(updatedTasks));
+      setEditIndex(null);
+    } else {
+      const newTasks = [...tasks, task];
+      setTasks(newTasks);
+      localStorage.setItem("tasks", JSON.stringify(newTasks));
     }
+    setTask("");
   };
-  
+  const editTask = (index) => {
+    setEditIndex(index);
+    setTask(tasks[index]);
+  };
+
   const deleteTasks = (index) => {
-    const updatedTasks = tasks.filter((_, i) => i !== index); // Filter out the task to delete
+    const updatedTasks = tasks.filter((_, i) => i !== index);
     setTasks(updatedTasks); // Update the state
-    localStorage.setItem("tasks", JSON.stringify(updatedTasks)); // Save updated tasks to localStorage
+    localStorage.setItem("tasks", JSON.stringify(updatedTasks));
   };
 
   useEffect(() => {
     const savedTasks = localStorage.getItem("tasks");
     if (savedTasks) {
       try {
-        setTasks(JSON.parse(savedTasks)); // Parse the JSON string
+        setTasks(JSON.parse(savedTasks));
       } catch (error) {
         console.error("Error parsing JSON from local storage:", error);
       }
     }
   }, []);
+
   return (
     <>
       <div className="app flex flex-col w-full items-center   mx-auto h-screen  shadow-lg  align-middle bg-gray-800">
@@ -48,7 +61,7 @@ function App() {
               onClick={addTasks}
               className="bg-blue-500 text-white px-4 py-2 rounded-md mt-2"
             >
-              Add Tasks
+              {editIndex !== null ? "Update Task" : "Add Task"}
             </button>
           </div>
         </div>
@@ -60,12 +73,20 @@ function App() {
                 key={index}
               >
                 {t}
-                <button
-                  onClick={() => deleteTasks(index)}
-                  className="bg-gray-400 text-white px-2 py-1 rounded-md "
-                >
-                  &#x274C;
-                </button>
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => deleteTasks(index)}
+                    className="bg-gray-400 text-white px-2 py-1 rounded-md "
+                  >
+                    &#x274C;
+                  </button>
+                  <button
+                    onClick={() => editTask(index)}
+                    className="bg-gray-400 text-white px-2 py-1 rounded-md "
+                  >
+                    &#x270D;
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
